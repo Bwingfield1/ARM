@@ -25,7 +25,7 @@ int main()
    button.fall(&release);
     while(true){
         if (input){
-        char time[6];
+        char time[5];
         printf("Enter a time for the over (xx:xx): ");
         scanf("%5s", time);
         if (sscanf(time, "%2d%2d", &minute, &sec) == 2){
