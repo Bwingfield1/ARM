@@ -1,0 +1,41 @@
+#include "mbed.h"
+InterruptIn button(BUTTON1);
+DigitalOut myLed(LED1);
+DigitalIn myButton(BUTTON1);
+
+bool input = false;
+Timeout flipper;
+int minute;
+int sec;
+
+void TurnOff(){
+    myLed = 0;
+}
+void release(){
+    input = true;
+    
+}
+void flip(){
+    myLed = !myLed;
+}
+
+int main()
+{
+   button.rise(&flip);
+   button.fall(&release);
+    while(true){
+        if (input){
+        char time[6];
+        printf("Enter a time for the over (xx:xx): ");
+        scanf("%5s", time);
+        if (sscanf(time, "%2d%2d", &minute, &sec) == 2){
+            int convert  = minute * 60 + sec;
+            flipper.attach(&TurnOff, convert);
+        } else{
+            printf("invalid time entered\n");
+        }
+        input = false;
+        }
+        ThisThread::sleep_for(100);
+    }
+}
