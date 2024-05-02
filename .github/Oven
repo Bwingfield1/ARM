@@ -1,22 +1,37 @@
 #include "mbed.h"
 InterruptIn button(BUTTON1);
-DigitalOut myLed(LED1);
+DigitalOut myLed(LED2);
 DigitalIn myButton(BUTTON1);
 
 bool input = false;
 Timeout flipper;
 int minute;
 int sec;
-
+int tap = 0;
+bool ovenOn = false;
+bool cancelled = false;
 void TurnOff(){
     myLed = 0;
+   
 }
+
 void release(){
     input = true;
     
 }
 void flip(){
     myLed = !myLed;
+    if(ovenOn){
+        tap++;
+        if(tap == 2){
+            flipper.detach();
+            minute = 0;
+            sec = 0;
+            TurnOff();
+            tap = 0;
+            cancelled = true;
+        }
+    }
 }
 
 int main()
@@ -24,15 +39,25 @@ int main()
    button.rise(&flip);
    button.fall(&release);
     while(true){
+        ovenOn = false;
+        cancelled = false;
         if (input){
-        char time[5];
-        printf("Enter a time for the over (xx:xx): ");
-        scanf("%5s", time);
-        if (sscanf(time, "%2d%2d", &minute, &sec) == 2){
-            int convert  = minute * 60 + sec;
-            flipper.attach(&TurnOff, convert);
-        } else{
-            printf("invalid time entered\n");
+        char time[6];
+        printf("Enter a time for the oven (xx:xx): ");
+        scanf("%5s", time); //measures length of input
+        if (sscanf(time, "%2d%2d", &minute, &sec) == 2 && minute <= 23 && sec <= 59){  //checks for invalid time
+            int convert  = minute * 60 + sec; // converting time to seconds
+            flipper.attach(&TurnOff, convert); // start timer
+            ovenOn = true;
+            if(cancelled){
+                printf("\nTimer cancelled");  
+            }
+        }
+        
+        else{
+            printf("invalid time entered\n"); // displays when invalid time is entered
+            TurnOff();
+        
         }
         input = false;
         }
