@@ -9,58 +9,78 @@ int minute;
 int sec;
 int tap = 0;
 bool ovenOn = false;
-bool cancelled = false;
+bool prompt = true;
+
 void TurnOff(){
     myLed = 0;
    
 }
-
-void release(){
-    input = true;
-    
-}
-void flip(){
-    myLed = !myLed;
-    if(ovenOn){
-        tap++;
-        if(tap == 2){
+void cancelTimer(){
+     
             flipper.detach();
             minute = 0;
             sec = 0;
             TurnOff();
             tap = 0;
-            cancelled = true;
-        }
+            
+        
     }
+
+void release(){
+    input = true;
+    tap++;
+    
+}
+void flip(){
+    myLed = !myLed;
+   
+}
+void print(){
+
 }
 
 int main()
 {
-   button.rise(&flip);
-   button.fall(&release);
+     button.fall(&release);
     while(true){
-        ovenOn = false;
-        cancelled = false;
-        if (input){
-        char time[6];
-        printf("Enter a time for the oven (xx:xx): ");
-        scanf("%5s", time); //measures length of input
-        if (sscanf(time, "%2d%2d", &minute, &sec) == 2 && minute <= 23 && sec <= 59){  //checks for invalid time
-            int convert  = minute * 60 + sec; // converting time to seconds
-            flipper.attach(&TurnOff, convert); // start timer
-            ovenOn = true;
-            if(cancelled){
-                printf("\nTimer cancelled");  
+      if (tap==1){
+        if(input){
+            char time[6];
+            //button.rise(&flip);
+            
+            if(prompt){
+                button.rise(&flip);
+                printf("Enter a time for the oven (xx:xx): ");
+                scanf("%5s", time); //measures length of input 
             }
-        }
+                if (sscanf(time, "%2d%2d", &minute, &sec) == 2 && minute <= 23 && sec <= 59){  //checks for invalid time
+                    button.rise(&cancelTimer);
+                    button.fall(&release); 
+                    int convert  = minute * 60 + sec; // converting time to seconds
+                    flipper.attach(&TurnOff, convert); // start timer
+                    ovenOn = true;
+                    
+                    if(tap == 2){
+                        printf("\nTimer cancelled\n");
+                        prompt = true;
+                        TurnOff();
+                    }
+                    
+                }
         
-        else{
-            printf("invalid time entered\n"); // displays when invalid time is entered
-            TurnOff();
+                else{
+                    printf("invalid time entered\n"); // displays when invalid time is entered
+                    TurnOff();
         
-        }
-        input = false;
-        }
-        ThisThread::sleep_for(100);
+                }
+                ovenOn = false;
+                 
+            
+            input = false;
+        } tap = 0;
+        
     }
+    
+     ThisThread::sleep_for(100);
+}
 }
